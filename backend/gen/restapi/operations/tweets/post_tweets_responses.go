@@ -58,6 +58,51 @@ func (o *PostTweetsCreated) WriteResponse(rw http.ResponseWriter, producer runti
 	}
 }
 
+// PostTweetsBadRequestCode is the HTTP code returned for type PostTweetsBadRequest
+const PostTweetsBadRequestCode int = 400
+
+/*
+PostTweetsBadRequest 不正なリクエスト
+
+swagger:response postTweetsBadRequest
+*/
+type PostTweetsBadRequest struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.Error `json:"body,omitempty"`
+}
+
+// NewPostTweetsBadRequest creates PostTweetsBadRequest with default headers values
+func NewPostTweetsBadRequest() *PostTweetsBadRequest {
+
+	return &PostTweetsBadRequest{}
+}
+
+// WithPayload adds the payload to the post tweets bad request response
+func (o *PostTweetsBadRequest) WithPayload(payload *models.Error) *PostTweetsBadRequest {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the post tweets bad request response
+func (o *PostTweetsBadRequest) SetPayload(payload *models.Error) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *PostTweetsBadRequest) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(400)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
 // PostTweetsUnauthorizedCode is the HTTP code returned for type PostTweetsUnauthorized
 const PostTweetsUnauthorizedCode int = 401
 
@@ -95,6 +140,51 @@ func (o *PostTweetsUnauthorized) SetPayload(payload *models.Error) {
 func (o *PostTweetsUnauthorized) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
 
 	rw.WriteHeader(401)
+	if o.Payload != nil {
+		payload := o.Payload
+		if err := producer.Produce(rw, payload); err != nil {
+			panic(err) // let the recovery middleware deal with this
+		}
+	}
+}
+
+// PostTweetsInternalServerErrorCode is the HTTP code returned for type PostTweetsInternalServerError
+const PostTweetsInternalServerErrorCode int = 500
+
+/*
+PostTweetsInternalServerError サーバーエラー
+
+swagger:response postTweetsInternalServerError
+*/
+type PostTweetsInternalServerError struct {
+
+	/*
+	  In: Body
+	*/
+	Payload *models.Error `json:"body,omitempty"`
+}
+
+// NewPostTweetsInternalServerError creates PostTweetsInternalServerError with default headers values
+func NewPostTweetsInternalServerError() *PostTweetsInternalServerError {
+
+	return &PostTweetsInternalServerError{}
+}
+
+// WithPayload adds the payload to the post tweets internal server error response
+func (o *PostTweetsInternalServerError) WithPayload(payload *models.Error) *PostTweetsInternalServerError {
+	o.Payload = payload
+	return o
+}
+
+// SetPayload sets the payload to the post tweets internal server error response
+func (o *PostTweetsInternalServerError) SetPayload(payload *models.Error) {
+	o.Payload = payload
+}
+
+// WriteResponse to the client
+func (o *PostTweetsInternalServerError) WriteResponse(rw http.ResponseWriter, producer runtime.Producer) {
+
+	rw.WriteHeader(500)
 	if o.Payload != nil {
 		payload := o.Payload
 		if err := producer.Produce(rw, payload); err != nil {

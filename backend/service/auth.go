@@ -115,4 +115,28 @@ func (s *AuthService) Login(ctx context.Context, input LoginInput) (*LoginRespon
 		User:  user,
 		Token: tokenString,
 	}, nil
-} 
+}
+
+type Claims struct {
+	UserID int64 `json:"user_id"`
+	jwt.RegisteredClaims
+}
+
+func (s *AuthService) ValidateToken(tokenString string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(config.SecretKey), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, errors.New("invalid token")
+}

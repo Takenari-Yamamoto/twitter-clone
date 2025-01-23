@@ -208,8 +208,20 @@ func init() {
               "$ref": "#/definitions/Tweet"
             }
           },
+          "400": {
+            "description": "不正なリクエスト",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
           "401": {
             "description": "認証エラー",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
             "schema": {
               "$ref": "#/definitions/Error"
             }
@@ -690,8 +702,20 @@ func init() {
               "$ref": "#/definitions/Tweet"
             }
           },
+          "400": {
+            "description": "不正なリクエスト",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
           "401": {
             "description": "認証エラー",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
             "schema": {
               "$ref": "#/definitions/Error"
             }

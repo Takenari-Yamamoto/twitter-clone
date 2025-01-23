@@ -2,12 +2,14 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 
 	"github.com/Takenari-Yamamoto/twitter-clone/db"
 	"github.com/Takenari-Yamamoto/twitter-clone/gen/restapi"
 	"github.com/Takenari-Yamamoto/twitter-clone/gen/restapi/operations"
 	"github.com/Takenari-Yamamoto/twitter-clone/gen/restapi/operations/auth"
+	"github.com/Takenari-Yamamoto/twitter-clone/gen/restapi/operations/tweets"
 	"github.com/Takenari-Yamamoto/twitter-clone/handler"
 	"github.com/Takenari-Yamamoto/twitter-clone/service"
 	"github.com/go-openapi/loads"
@@ -17,18 +19,24 @@ import (
 func configureAPI(api *operations.TwitterCloneAPI, db *sql.DB) {
 	// サービスとハンドラーの初期化
 	authService := service.NewAuthService(db)
-	if authService == nil {
-		log.Fatal("Failed to create auth service")
-	}
+	tweetService := service.NewTweetService(db)
 
 	authHandler := handler.NewAuthHandler(authService)
-	if authHandler == nil {
-		log.Fatal("Failed to create auth handler")
+	tweetHandler := handler.NewTweetHandler(tweetService)
+
+	// 認証ミドルウェアの設定
+	api.BearerAuth = func(token string) (interface{}, error) {
+		claims, err := authService.ValidateToken(token)
+		if err != nil {
+			return nil, errors.New("invalid token")
+		}
+		return claims.UserID, nil
 	}
 
 	// ハンドラーの設定
 	api.AuthPostAuthSignupHandler = auth.PostAuthSignupHandlerFunc(authHandler.HandleSignup)
 	api.AuthPostAuthLoginHandler = auth.PostAuthLoginHandlerFunc(authHandler.HandleLogin)
+	api.TweetsPostTweetsHandler = tweets.PostTweetsHandlerFunc(tweetHandler.HandleCreateTweet)
 }
 
 func main() {

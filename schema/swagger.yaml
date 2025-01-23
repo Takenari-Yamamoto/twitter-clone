@@ -191,8 +191,16 @@ paths:
           description: 投稿成功
           schema:
             $ref: "#/definitions/Tweet"
+        400:
+          description: 不正なリクエスト
+          schema:
+            $ref: "#/definitions/Error"
         401:
           description: 認証エラー
+          schema:
+            $ref: "#/definitions/Error"
+        500:
+          description: サーバーエラー
           schema:
             $ref: "#/definitions/Error"
 
@@ -314,4 +322,4 @@ paths:
         404:
           description: ユーザーが見つかりません
           schema:
-            $ref: "#/definitions/Error" 
+            $ref: "#/definitions/Error"
