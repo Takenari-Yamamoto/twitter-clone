@@ -3,12 +3,14 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Takenari-Yamamoto/twitter-clone/config"
 	"github.com/Takenari-Yamamoto/twitter-clone/models"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -27,9 +29,35 @@ type SignupInput struct {
 }
 
 func (s *AuthService) Signup(ctx context.Context, input SignupInput) (*models.User, error) {
+	fmt.Println("Signup service called")
+	// ユーザー名の重複チェック
+	exists, err := models.Users(qm.Where("username = ?", input.Username)).Exists(ctx, s.db)
+	if err != nil {
+		fmt.Printf("Error checking username existence: %v\n", err)
+		return nil, err
+	}
+	if exists {
+		fmt.Println("Username already exists:", input.Username)
+		return nil, errors.New("username already exists")
+	}
+	fmt.Println("Username check passed")
+
+	// メールアドレスの重複チェック
+	exists, err = models.Users(qm.Where("email = ?", input.Email)).Exists(ctx, s.db)
+	if err != nil {
+		fmt.Printf("Error checking email existence: %v\n", err)
+		return nil, err
+	}
+	if exists {
+		fmt.Println("Email already exists:", input.Email)
+		return nil, errors.New("email already exists")
+	}
+	fmt.Println("Email check passed")
+
 	// パスワードのハッシュ化
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
+		fmt.Printf("Error hashing password: %v\n", err)
 		return nil, err
 	}
 
@@ -38,11 +66,14 @@ func (s *AuthService) Signup(ctx context.Context, input SignupInput) (*models.Us
 		Email:        input.Email,
 		PasswordHash: string(hashedPassword),
 	}
+	fmt.Println("User object created")
 
 	err = user.Insert(ctx, s.db, boil.Infer())
 	if err != nil {
+		fmt.Printf("Error inserting user: %v\n", err)
 		return nil, err
 	}
+	fmt.Printf("User inserted successfully with ID: %d\n", user.ID)
 
 	return user, nil
 }
@@ -58,7 +89,7 @@ type LoginResponse struct {
 }
 
 func (s *AuthService) Login(ctx context.Context, input LoginInput) (*LoginResponse, error) {
-	user, err := models.Users(models.UserWhere.Email.EQ(input.Email)).One(ctx, s.db)
+	user, err := models.Users(qm.Where("email = ?", input.Email)).One(ctx, s.db)
 	if err != nil {
 		return nil, errors.New("invalid credentials")
 	}

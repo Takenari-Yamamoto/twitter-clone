@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"fmt"
+
 	"github.com/Takenari-Yamamoto/twitter-clone/gen/models"
 	"github.com/Takenari-Yamamoto/twitter-clone/gen/restapi/operations/auth"
 	"github.com/Takenari-Yamamoto/twitter-clone/service"
@@ -13,15 +15,37 @@ type AuthHandler struct {
 }
 
 func NewAuthHandler(authService *service.AuthService) *AuthHandler {
-	return &AuthHandler{authService: authService}
+	if authService == nil {
+		panic("authService must not be nil")
+	}
+	return &AuthHandler{
+		authService: authService,
+	}
 }
 
 func (h *AuthHandler) HandleSignup(params auth.PostAuthSignupParams) middleware.Responder {
+	fmt.Println("Signup called")
+	if h.authService == nil {
+		return auth.NewPostAuthSignupBadRequest().WithPayload(&models.Error{
+			Code:    500,
+			Message: "Internal server error: auth service not initialized",
+		})
+	}
+
+	if params.Body.Username == nil || params.Body.Email == nil || params.Body.Password == nil {
+		return auth.NewPostAuthSignupBadRequest().WithPayload(&models.Error{
+			Code:    400,
+			Message: "Invalid request: missing required fields",
+		})
+	}
+
 	user, err := h.authService.Signup(params.HTTPRequest.Context(), service.SignupInput{
 		Username: *params.Body.Username,
 		Email:    *params.Body.Email,
 		Password: *params.Body.Password,
 	})
+	fmt.Println("User created:", user)
+
 	if err != nil {
 		return auth.NewPostAuthSignupBadRequest().WithPayload(&models.Error{
 			Code:    400,
@@ -29,13 +53,29 @@ func (h *AuthHandler) HandleSignup(params auth.PostAuthSignupParams) middleware.
 		})
 	}
 
+	// nilチェックを追加
+	displayName := ""
+	if user.DisplayName.Valid {
+		displayName = user.DisplayName.String
+	}
+
+	bio := ""
+	if user.Bio.Valid {
+		bio = user.Bio.String
+	}
+
+	avatarURL := ""
+	if user.AvatarURL.Valid {
+		avatarURL = user.AvatarURL.String
+	}
+
 	return auth.NewPostAuthSignupCreated().WithPayload(&models.User{
 		ID:          user.ID,
 		Username:    user.Username,
 		Email:       user.Email,
-		DisplayName: *user.DisplayName.Ptr(),
-		Bio:         *user.Bio.Ptr(),
-		AvatarURL:   *user.AvatarURL.Ptr(),
+		DisplayName: displayName,
+		Bio:         bio,
+		AvatarURL:   avatarURL,
 		CreatedAt:   strfmt.DateTime(user.CreatedAt),
 		UpdatedAt:   strfmt.DateTime(user.UpdatedAt),
 	})

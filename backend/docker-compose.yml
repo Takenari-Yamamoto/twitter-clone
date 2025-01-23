@@ -56,5 +56,25 @@ services:
     working_dir: /app
     command: generate server -f api/swagger.yaml -t gen --exclude-main -A twitter-clone
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: go run cmd/main.go
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=twitter_user
+      - DB_PASSWORD=twitter_password
+      - DB_NAME=twitter_clone
+      - DB_PORT=3306
+    depends_on:
+      mysql:
+        condition: service_healthy
+
 volumes:
   mysql-data:
