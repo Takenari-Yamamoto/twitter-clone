@@ -420,6 +420,17 @@ func init() {
         }
       }
     },
+    "LoginResponse": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        },
+        "user": {
+          "$ref": "#/definitions/User"
+        }
+      }
+    },
     "Tweet": {
       "type": "object",
       "properties": {
@@ -888,6 +899,17 @@ func init() {
         },
         "message": {
           "type": "string"
+        }
+      }
+    },
+    "LoginResponse": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string"
+        },
+        "user": {
+          "$ref": "#/definitions/User"
         }
       }
     },

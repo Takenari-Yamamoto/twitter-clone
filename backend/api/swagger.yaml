@@ -71,6 +71,14 @@ definitions:
       message:
         type: string
 
+  LoginResponse:
+    type: object
+    properties:
+      token:
+        type: string
+      user:
+        $ref: "#/definitions/User"
+
 paths:
   /auth/signup:
     post:
