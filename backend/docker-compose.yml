@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: twitter-clone-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: twitter_clone
+      MYSQL_USER: twitter_user
+      MYSQL_PASSWORD: twitter_password
+      TZ: Asia/Tokyo
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql/conf.d:/etc/mysql/conf.d
+      - ./mysql/initdb.d:/docker-entrypoint-initdb.d
+    command: |
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "twitter_user", "-ptwitter_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    image: migrate/migrate
+    volumes:
+      - ./db/migrations:/migrations
+    command: ["-path", "/migrations", "-database",  "mysql://twitter_user:twitter_password@tcp(mysql:3306)/twitter_clone?multiStatements=true", "up"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  sqlboiler:
+    image: golang:1.22
+    volumes:
+      - .:/app
+    working_dir: /app
+    networks:
+      - default
+    command: sh -c "go install github.com/volatiletech/sqlboiler/v4@latest && go install github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-mysql@latest && sqlboiler mysql"
+    environment:
+      - GOPATH=/go
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql-data:

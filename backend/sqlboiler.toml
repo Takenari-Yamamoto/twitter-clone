@@ -1,0 +1,15 @@
+pkgname="models"
+output="models"
+wipe=true
+no-tests=false
+add-global-variants=false
+add-panic-variants=false
+
+[mysql]
+dbname="twitter_clone"
+host="mysql"
+port=3306
+user="twitter_user"
+pass="twitter_password"
+sslmode="false"
+whitelist=["users", "tweets", "likes", "follows"] 
