@@ -11,6 +11,7 @@ import (
 	"github.com/Takenari-Yamamoto/twitter-clone/handler"
 	"github.com/Takenari-Yamamoto/twitter-clone/service"
 	"github.com/go-openapi/loads"
+	"github.com/rs/cors"
 )
 
 func configureAPI(api *operations.TwitterCloneAPI, db *sql.DB) {
@@ -65,9 +66,17 @@ func main() {
 	server.Port = 8080
 	server.Host = "0.0.0.0"
 
-	// Swaggerの設定
-	api.UseSwaggerUI()
-	server.ConfigureAPI()
+	// CORSの設定
+	corsMiddleware := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://localhost:3000", "http://localhost:3001"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders: []string{"*"},
+		Debug:          true,
+	})
+
+	// CORSミドルウェアを適用
+	handler := corsMiddleware.Handler(api.Serve(nil))
+	server.SetHandler(handler)
 
 	log.Printf("Server is ready to handle requests at %s:%d", server.Host, server.Port)
 
@@ -75,4 +84,4 @@ func main() {
 	if err := server.Serve(); err != nil {
 		log.Fatalln(err)
 	}
-} 
+}
