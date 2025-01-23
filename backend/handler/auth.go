@@ -82,6 +82,21 @@ func (h *AuthHandler) HandleSignup(params auth.PostAuthSignupParams) middleware.
 }
 
 func (h *AuthHandler) HandleLogin(params auth.PostAuthLoginParams) middleware.Responder {
+	fmt.Println("Login called")
+	if h.authService == nil {
+		return auth.NewPostAuthLoginUnauthorized().WithPayload(&models.Error{
+			Code:    500,
+			Message: "Internal server error: auth service not initialized",
+		})
+	}
+
+	if params.Body.Email == nil || params.Body.Password == nil {
+		return auth.NewPostAuthLoginUnauthorized().WithPayload(&models.Error{
+			Code:    400,
+			Message: "Invalid request: missing required fields",
+		})
+	}
+
 	response, err := h.authService.Login(params.HTTPRequest.Context(), service.LoginInput{
 		Email:    *params.Body.Email,
 		Password: *params.Body.Password,
@@ -93,15 +108,38 @@ func (h *AuthHandler) HandleLogin(params auth.PostAuthLoginParams) middleware.Re
 		})
 	}
 
+	if response == nil || response.User == nil {
+		return auth.NewPostAuthLoginUnauthorized().WithPayload(&models.Error{
+			Code:    500,
+			Message: "Internal server error: invalid response",
+		})
+	}
+
+	// nilチェックを追加
+	displayName := ""
+	if response.User.DisplayName.Valid {
+		displayName = response.User.DisplayName.String
+	}
+
+	bio := ""
+	if response.User.Bio.Valid {
+		bio = response.User.Bio.String
+	}
+
+	avatarURL := ""
+	if response.User.AvatarURL.Valid {
+		avatarURL = response.User.AvatarURL.String
+	}
+
 	return auth.NewPostAuthLoginOK().WithPayload(&auth.PostAuthLoginOKBody{
 		Token: response.Token,
 		User: &models.User{
 			ID:          response.User.ID,
 			Username:    response.User.Username,
 			Email:       response.User.Email,
-			DisplayName: *response.User.DisplayName.Ptr(),
-			Bio:         *response.User.Bio.Ptr(),
-			AvatarURL:   *response.User.AvatarURL.Ptr(),
+			DisplayName: displayName,
+			Bio:         bio,
+			AvatarURL:   avatarURL,
 			CreatedAt:   strfmt.DateTime(response.User.CreatedAt),
 			UpdatedAt:   strfmt.DateTime(response.User.UpdatedAt),
 		},
