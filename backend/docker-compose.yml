@@ -49,5 +49,12 @@ services:
       mysql:
         condition: service_healthy
 
+  swagger:
+    image: quay.io/goswagger/swagger
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: generate server -f api/swagger.yaml -t gen --exclude-main -A twitter-clone
+
 volumes:
   mysql-data:
