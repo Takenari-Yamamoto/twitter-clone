@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   mysql:
@@ -21,7 +21,17 @@ services:
       --collation-server=utf8mb4_unicode_ci
       --default-authentication-plugin=mysql_native_password
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "twitter_user", "-ptwitter_password"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "twitter_user",
+          "-ptwitter_password",
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -30,7 +40,14 @@ services:
     image: migrate/migrate
     volumes:
       - ./db/migrations:/migrations
-    command: ["-path", "/migrations", "-database",  "mysql://twitter_user:twitter_password@tcp(mysql:3306)/twitter_clone?multiStatements=true", "up"]
+    command:
+      [
+        "-path",
+        "/migrations",
+        "-database",
+        "mysql://twitter_user:twitter_password@tcp(mysql:3306)/twitter_clone?multiStatements=true",
+        "up",
+      ]
     depends_on:
       mysql:
         condition: service_healthy
@@ -52,9 +69,10 @@ services:
   swagger:
     image: quay.io/goswagger/swagger
     volumes:
+      - ../schema:/schema
       - .:/app
     working_dir: /app
-    command: generate server -f api/swagger.yaml -t gen --exclude-main -A twitter-clone
+    command: generate server -f /schema/swagger.yaml -t gen --exclude-main -A twitter-clone
 
   api:
     build:

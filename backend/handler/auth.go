@@ -144,4 +144,4 @@ func (h *AuthHandler) HandleLogin(params auth.PostAuthLoginParams) middleware.Re
 			UpdatedAt:   strfmt.DateTime(response.User.UpdatedAt),
 		},
 	})
-} 
+}
